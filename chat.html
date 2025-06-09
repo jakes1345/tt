@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>xat clone chat</title>
+	<script src="js/jquery.js"></script>
+
+	<link rel="stylesheet" type="text/css" href="css/chatbox.css">
+	<link rel="stylesheet" type="text/css" href="css/modal.css">
+	<link rel="stylesheet" type="text/css" href="css/violet-smileys.css">
+	<link rel="stylesheet" type="text/css" href="css/xat-original.css">
+	<link rel="stylesheet" type="text/css" href="css/xat-layout-fix.css">
+	
+	<!-- Redirect to the public/chat.html file which has the proper Phaser.js integration -->
+	<meta http-equiv="refresh" content="0;url=/chat">
+</head>
+
+<body>
+	<div id="wrap">
+		<div id="window1" class="left">
+			<div id="pane1" class="message_history">
+				<ul id="chat_history">
+				</ul>
+			</div>
+
+			<div id="pane2" class="input_box">
+				<!-- Violet Smileys Row with 8ball and radio icons -->
+				<div class="smilies-row" id="smiliesContainer">
+					<img src="img/8ball.svg" class="special-icon" alt="8ball" title="Ask the Magic 8-Ball a question" id="btn8Ball">
+					<img src="img/radio.svg" class="special-icon" alt="radio" title="Radio" id="btnRadio">
+					<!-- Violet Smileys -->
+					<img src="img/Smiles/Smilies-Violet/Violet/01.png" class="smiley" alt=":-)" title="Happy">
+					<img src="img/Smiles/Smilies-Violet/Violet/02.png" class="smiley" alt=";-)" title="Wink">
+					<img src="img/Smiles/Smilies-Violet/Violet/03.png" class="smiley" alt=":-D" title="Laugh">
+					<img src="img/Smiles/Smilies-Violet/Violet/04.png" class="smiley" alt=":-P" title="Tongue">
+					<img src="img/Smiles/Smilies-Violet/Violet/05.png" class="smiley" alt=":-O" title="Surprised">
+					<img src="img/Smiles/Smilies-Violet/Violet/06.png" class="smiley" alt=":-|" title="Neutral">
+					<img src="img/Smiles/Smilies-Violet/Violet/07.png" class="smiley" alt=":-*" title="Kiss">
+					<img src="img/Smiles/Smilies-Violet/Violet/08.png" class="smiley" alt=":-$" title="Blush">
+					<img src="img/Smiles/Smilies-Violet/Violet/09.png" class="smiley" alt=":-X" title="Sealed">
+					<img src="img/Smiles/Smilies-Violet/Violet/10.png" class="smiley" alt=":-\\" title="Confused">
+					<img src="img/Smiles/Smilies-Violet/Violet/11.png" class="smiley" alt=":-#" title="Silent">
+					<img src="img/Smiles/Smilies-Violet/Violet/12.png" class="smiley" alt=":-!" title="Foot in mouth">
+					<img src="img/Smiles/Smilies-Violet/Violet/13.png" class="smiley" alt=":-(" title="Sad">
+					<img src="img/Smiles/Smilies-Violet/Violet/14.png" class="smiley" alt=":cry:" title="Crying">
+					<img src="img/Smiles/Smilies-Violet/Violet/15.png" class="smiley" alt=":-@" title="Angry">
+				</div>
+				<textarea class="message_box" maxlength="180" placeholder="Start a new message"></textarea>
+
+			</div>
+		</div>
+
+		<div id="window2" class="right">
+			<div class="header">
+				<p>Chat</p>
+			</div>
+			<div class="userlist">
+				<ul id="userlist">
+				</ul>
+			</div>
+
+		</div>
+	</div>
+
+	<div class="modal">
+		<div class="modal-content">
+			<div class="dialogTitleBar">
+				<div class="dialogTitle"></div>
+
+				<div class="dialogTitleAction">
+					<span class="close-button"><img src="https://xat.com/content/boxP796efecb/www/svg/xdelete.svg" alt="delete"></span>
+
+				</div>
+			</div>
+
+			<div class="dialogUserInfo">
+				<img id="dialogAvatar" src="img/avatars/83.png" width="130" height="130" style="padding: 0.4rem;">
+				
+				<div class="dialogDisplayName">
+				</div>
+			</div>
+			
+		</div>
+	</div>
+
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="js/resources-config.js"></script>
+	<script src="js/chatclient.js"></script>
+	<script src="js/displaymodal.js"></script>
+	<script src="js/toolbar-functions.js"></script>
+	<script>
+		// Fix for violet smileys and userlist positioning
+		document.addEventListener('DOMContentLoaded', function() {
+			// Set the chat container dimensions to match original xat.com
+			const wrap = document.getElementById('wrap');
+			if (wrap) {
+				wrap.style.width = '728px';
+				wrap.style.height = '486px';
+				wrap.style.margin = '20px auto';
+				wrap.style.border = '2px solid #0000aa';
+				wrap.style.borderRadius = '5px';
+				wrap.style.boxShadow = '0 0 10px rgba(0, 0, 255, 0.3)';
+				wrap.style.overflow = 'hidden';
+				wrap.style.display = 'flex';
+			}
+			
+			// Style the left window (chat messages)
+			const window1 = document.getElementById('window1');
+			if (window1) {
+				window1.style.width = '70%';
+				window1.style.height = '100%';
+				window1.style.backgroundColor = '#1a1a2e';
+			}
+			
+			// Style the right window (userlist)
+			const window2 = document.getElementById('window2');
+			if (window2) {
+				window2.style.width = '30%';
+				window2.style.minWidth = '200px';
+				window2.style.height = '100%';
+				window2.style.backgroundColor = '#000044';
+				window2.style.borderLeft = '1px solid #0000aa';
+			}
+			
+			// Add event listeners for the smileys
+			document.querySelectorAll('.smiley').forEach(smiley => {
+				smiley.addEventListener('click', function() {
+					const messageBox = document.querySelector('.message_box');
+					if (messageBox) {
+						messageBox.value += ' ' + smiley.alt + ' ';
+						messageBox.focus();
+					}
+				});
+			});
+			
+			// Add event listeners for the 8ball and radio icons
+			const btn8Ball = document.getElementById('btn8Ball');
+			if (btn8Ball) {
+				btn8Ball.addEventListener('click', function() {
+					const responses = [
+						'It is certain', 'It is decidedly so', 'Without a doubt', 
+						'Yes, definitely', 'You may rely on it', 'As I see it, yes',
+						'Most likely', 'Outlook good', 'Yes', 'Signs point to yes',
+						'Reply hazy, try again', 'Ask again later', 'Better not tell you now',
+						'Cannot predict now', 'Concentrate and ask again', 'Don\'t count on it',
+						'My reply is no', 'My sources say no', 'Outlook not so good', 'Very doubtful'
+					];
+					const response = responses[Math.floor(Math.random() * responses.length)];
+					alert(`8Ball says: ${response}`);
+				});
+			}
+			
+			const btnRadio = document.getElementById('btnRadio');
+			if (btnRadio) {
+				btnRadio.addEventListener('click', function() {
+					alert('Radio feature would open here');
+				});
+			}
+		});
+	</script>
+</body>
+
+</html>
